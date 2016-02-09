@@ -22,34 +22,33 @@ class domainThread(threading.Thread):
 		self.name = "mainthread-"+domain
 	def run(self):
 		print "Processing %s - %s" % (self.domain,self.name)
+		child_threads = []
 		config = ConfigParser.ConfigParser()
 		config.read(workdir+'/website.conf/'+self.domain)
 		try:
 			webroot=config.get('tar', 'webroot')
 		except:
-			tar_thread=threading.Thread( target=tarJob, name="tar-"+self.domain, args=(self.domain, webroot) )
+			pass
 		else:
 			tar_thread=threading.Thread( target=tarJob, name="tar-"+self.domain, args=(self.domain, webroot) )
 			tar_thread.daemon=False
-			tar_thread.start()
-			#tar_thread.join()
+			child_threads.append(tar_thread)
 		try:
 			mysql_db=config.get('mysql', 'db')
 		except:
-			tar_thread=threading.Thread( target=tarJob, name="tar-"+self.domain, args=(self.domain, webroot) )
+			pass
 		else:
 			mysql_thread=threading.Thread( target=mysqlJob, name="mysql-"+self.domain, args=(self.domain, ) )
 			mysql_thread.daemon=False
-			mysql_thread.start()
-			#mysql_thread.join()
-		while ( tar_thread.isAlive() or mysql_thread.isAlive() ):
-			print "Waiting %s" % self.domain
-			time.sleep(1)
+			child_threads.append(mysql_thread)
+		for thread in child_threads:
+			thread.start()
+		for thread in child_threads:
+			thread.join()
 		start_domainThread()
 			
 
 def tarJob(domain, webroot):
-	time.sleep (random.randint(2,10))
 	tar = tarfile.open(workdir+'/archives/'+domain+".tar.gz", "w:gz")
 	tar.add(webroot)
 	tar.close()
@@ -57,7 +56,7 @@ def tarJob(domain, webroot):
 
 def mysqlJob(domain):
 	time.sleep(random.randint(1,5))
-	print "Done SQL %s" % domain
+	print "Done MySQL %s" % domain
 
 def start_domainThread():
 	if not wQueue.empty():
