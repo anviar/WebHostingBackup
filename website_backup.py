@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
-import os,sys,threading,Queue,time,ConfigParser,random
-import tarfile
+import os,sys,threading,Queue,time,ConfigParser,subprocess,random
 
 workdir=os.path.dirname(os.path.realpath(__file__))
 
@@ -38,7 +37,7 @@ class domainThread(threading.Thread):
 		except:
 			pass
 		else:
-			mysql_thread=threading.Thread( target=mysqlJob, name="mysql-"+self.domain, args=(self.domain, ) )
+			mysql_thread=threading.Thread( target=mysqlJob, name="mysql-"+self.domain, args=(self.domain,mysql_db) )
 			mysql_thread.daemon=False
 			child_threads.append(mysql_thread)
 		for thread in child_threads:
@@ -49,13 +48,18 @@ class domainThread(threading.Thread):
 			
 
 def tarJob(domain, webroot):
-	tar = tarfile.open(workdir+'/archives/'+domain+".tar.gz", "w:gz")
-	tar.add(webroot)
-	tar.close()
+	devnull = open(os.devnull, 'w')
+	subprocess.call(["tar","-zcf",workdir+'/archives/'+domain+".tar.gz",webroot],stderr=devnull)
+	devnull.close()
 	print "Done tar %s %s" % (domain, webroot)
 
-def mysqlJob(domain):
-	time.sleep(random.randint(1,5))
+def mysqlJob(domain, db):
+	sql_file=open(workdir+'/archives/'+domain+".sql.bz2", "wb")
+	mysql_dump=subprocess.Popen(["mysqldump",db], stdout=subprocess.PIPE)
+	mysql_compressor=subprocess.Popen("bzip2", stdin=mysql_dump.stdout, stdout=sql_file)
+	mysql_dump.stdout.close()
+	mysql_compressor.communicate()
+	sql_file.close()
 	print "Done MySQL %s" % domain
 
 def start_domainThread():
@@ -75,5 +79,3 @@ while count < maxJobs:
 	start_domainThread()
 	count += 1
 
-#time.sleep(5)
-#print threading.enumerate()
