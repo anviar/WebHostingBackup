@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import os,sys,threading,Queue,time,ConfigParser,subprocess,random
+import os,sys,threading,Queue,time,ConfigParser,subprocess,datetime,random
 
 workdir=os.path.dirname(os.path.realpath(__file__))
 
@@ -20,7 +20,7 @@ class domainThread(threading.Thread):
 		self.domain = domain
 		self.name = "mainthread-"+domain
 	def run(self):
-		print "Processing %s - %s" % (self.domain,self.name)
+		print "%s: started %s " % (datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M:%S'),self.domain)
 		child_threads = []
 		config = ConfigParser.ConfigParser()
 		config.read(workdir+'/website.conf/'+self.domain)
@@ -44,6 +44,7 @@ class domainThread(threading.Thread):
 			thread.start()
 		for thread in child_threads:
 			thread.join()
+		print "%s: complited %s" % (datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M:%S'),self.domain)
 		start_domainThread()
 			
 
@@ -51,7 +52,7 @@ def tarJob(domain, webroot):
 	devnull = open(os.devnull, 'w')
 	subprocess.call(["tar","-zcf",workdir+'/archives/'+domain+".tar.gz",webroot],stderr=devnull)
 	devnull.close()
-	print "Done tar %s %s" % (domain, webroot)
+	print "%s: done tar %s" % (datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M:%S'), domain)
 
 def mysqlJob(domain, db):
 	sql_file=open(workdir+'/archives/'+domain+".sql.bz2", "wb")
@@ -60,7 +61,7 @@ def mysqlJob(domain, db):
 	mysql_dump.stdout.close()
 	mysql_compressor.communicate()
 	sql_file.close()
-	print "Done MySQL %s" % domain
+	print "%s: done MySQL %s" % (datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M:%S'), domain)
 
 def start_domainThread():
 	if not wQueue.empty():
