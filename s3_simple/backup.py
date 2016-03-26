@@ -58,7 +58,7 @@ class mysqlThread(threading.Thread):
 		dbpass=config.get('mysql', 'password')
 		for db in databases:
 			sql_file=open(workdir+'/'+db+".sql.bz2", "wb+")
-			mysql_dump=subprocess.Popen(["mysqldump","-u"+dbuser,"-p"+dbpass,db], stdout=subprocess.PIPE)
+			mysql_dump=subprocess.Popen(["mysqldump","-u"+dbuser,"-p"+dbpass,"--add-drop-table",db], stdout=subprocess.PIPE)
 			mysql_compressor=subprocess.Popen("bzip2", stdin=mysql_dump.stdout, stdout=sql_file)
 			mysql_dump.stdout.close()
 			mysql_compressor.communicate()
