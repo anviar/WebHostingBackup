@@ -28,6 +28,7 @@ if ( len(sys.argv) > 1 and sys.argv[1] == "-f" ) or not os.path.isfile(incfile):
 else:
     mode = "inc"
 
+
 class filesThread(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
@@ -58,19 +59,19 @@ class mysqlThread(threading.Thread):
                 self.daemon = False
                 self.name = "mysql-backup"
         def run(self):
-        print "%s: started %s " % (time.strftime('%Y-%m-%d %H:%M:%S'), self.name)
-        databases = config.get('mysql', 'databases').split(',')
-        dbuser = config['mysql']['user']
-        dbpass = config['mysql']['password']
-        for db in databases:
-            with subprocess.Popen( "mysqldump -u"
-                                           + dbuser
-                                           + " -p" + dbpass
-                                           + " --hex-blob --add-drop-table "
-                                           + db
-                                           + "|bzip2", stdout=subprocess.PIPE, shell=True).stdout as dataStream:
-                s3.upload_fileobj(dataStream, config.get('amazon', 'bucket'), "mysql_" + db + '_' + date + ".bz2" )
-            print "%s: %s database saved to cloud" % (time.strftime('%Y-%m-%d %H:%M:%S'),db)
+            print "%s: started %s " % (time.strftime('%Y-%m-%d %H:%M:%S'), self.name)
+            databases = config.get('mysql', 'databases').split(',')
+            dbuser = config['mysql']['user']
+            dbpass = config['mysql']['password']
+            for db in databases:
+                with subprocess.Popen( "mysqldump -u"
+                                               + dbuser
+                                               + " -p" + dbpass
+                                               + " --hex-blob --add-drop-table "
+                                               + db
+                                               + "|bzip2", stdout=subprocess.PIPE, shell=True).stdout as dataStream:
+                    s3.upload_fileobj(dataStream, config.get('amazon', 'bucket'), "mysql_" + db + '_' + date + ".bz2" )
+                print "%s: %s database saved to cloud" % (time.strftime('%Y-%m-%d %H:%M:%S'),db)
 
 mysql_t = mysqlThread()
 files_t = filesThread()
