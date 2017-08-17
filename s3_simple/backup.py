@@ -5,8 +5,8 @@ import sys
 import time
 import threading
 import subprocess
-import ConfigParser,boto3
-from boto3.s3.transfer import S3Transfer
+import ConfigParser
+from boto3 import client as S3Client
 
 config = ConfigParser.ConfigParser()
 config.read('/etc/backup.conf')
@@ -16,7 +16,7 @@ date = time.strftime("%Y-%m-%d")
 incfile = workdir + "/files.snar"
 buffer_size = 32
 
-s3 = boto3.client(
+s3 = S3Client(
             's3',
             aws_access_key_id=config.get('amazon', 'aws_access_key_id'),
             aws_secret_access_key=config.get('amazon', 'aws_secret_access_key'),
@@ -61,8 +61,8 @@ class mysqlThread(threading.Thread):
         def run(self):
             print "%s: started %s " % (time.strftime('%Y-%m-%d %H:%M:%S'), self.name)
             databases = config.get('mysql', 'databases').split(',')
-            dbuser = config['mysql']['user']
-            dbpass = config['mysql']['password']
+            dbuser = config.get('mysql','user')
+            dbpass = config.get('mysql','password')
             for db in databases:
                 with subprocess.Popen( "mysqldump -u"
                                                + dbuser
