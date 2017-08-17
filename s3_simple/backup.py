@@ -61,12 +61,11 @@ class mysqlThread(threading.Thread):
         def run(self):
             print "%s: started %s " % (time.strftime('%Y-%m-%d %H:%M:%S'), self.name)
             databases = config.get('mysql', 'databases').split(',')
-            dbuser = config.get('mysql','user')
-            dbpass = config.get('mysql','password')
             for db in databases:
                 with subprocess.Popen( "mysqldump -u"
-                                               + dbuser
-                                               + " -p" + dbpass
+                                               + config.get('mysql','user')
+                                               + " -p" + config.get('mysql','password')
+                                               + " -h" + config.get('mysql','host')
                                                + " --hex-blob --add-drop-table "
                                                + db
                                                + "|bzip2", stdout=subprocess.PIPE, shell=True).stdout as dataStream:
